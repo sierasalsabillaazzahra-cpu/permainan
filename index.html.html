@@ -1,0 +1,1937 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#0d3b2a" />
+<title>GOBAK SODOR — Game Tradisional Indonesia</title>
+<style>
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root{
+  --green-dark:#0d3b2a;
+  --green:#1f7a4d;
+  --green-light:#3fbf7f;
+  --wood:#8b5a2b;
+  --wood-light:#c08a4b;
+  --red:#e63946;
+  --yellow:#ffcc00;
+  --blue:#2f6fed;
+  --cream:#fff8e7;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  font-family: "Trebuchet MS", "Segoe UI", Tahoma, Verdana, system-ui, sans-serif;
+  background:
+    radial-gradient(circle at 15% 10%, #2fbf8f 0%, transparent 45%),
+    radial-gradient(circle at 85% 15%, #ffcc00 0%, transparent 40%),
+    radial-gradient(circle at 50% 90%, #e63946 0%, transparent 45%),
+    linear-gradient(160deg, #0d3b2a 0%, #145c3f 60%, #0d3b2a 100%);
+  color: var(--cream);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+body::before{
+  content:"";
+  position: fixed; inset: 0;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(255,255,255,.04) 0 2px, transparent 2px 60px),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.04) 0 2px, transparent 2px 60px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+#app{ position: relative; z-index: 1; height: 100%; }
+
+/* ============================================================
+   SCREEN SYSTEM
+   ============================================================ */
+.screen{
+  position: absolute; inset: 0;
+  display: none;
+  overflow: hidden;
+}
+.screen.show{ display: flex; }
+
+/* ============================================================
+   MENU UTAMA
+   ============================================================ */
+#menu-screen{
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.menu-inner{
+  width: 100%;
+  max-width: 520px;
+  background: linear-gradient(160deg, rgba(255,248,231,.12), rgba(255,248,231,.05));
+  border: 2px solid rgba(255,204,0,.45);
+  border-radius: 28px;
+  padding: 22px 20px 26px;
+  text-align: center;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 20px 50px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.15);
+  animation: pop .45s cubic-bezier(.2,1.3,.5,1) both;
+}
+
+@keyframes pop{
+  from{ transform: scale(.85); opacity: 0; }
+  to{ transform: scale(1); opacity: 1; }
+}
+
+.flag{ font-size: 34px; line-height: 1; }
+
+.title{
+  font-size: clamp(30px, 9vw, 46px);
+  letter-spacing: 3px;
+  margin: 6px 0 2px;
+  background: linear-gradient(180deg, #fff6c9 0%, #ffcc00 55%, #e6a700 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 3px 0 rgba(0,0,0,.25);
+  font-weight: 900;
+}
+
+.subtitle{
+  font-size: 14px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #bff3d6;
+  margin-bottom: 12px;
+  font-weight: 700;
+}
+
+.desc{
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: #eafff3;
+  max-width: 400px;
+  margin: 0 auto 16px;
+}
+
+/* --- preview lapangan kecil --- */
+.field-preview{
+  position: relative;
+  height: 150px;
+  border-radius: 18px;
+  margin-bottom: 18px;
+  background:
+    repeating-linear-gradient(90deg, #2e9e63 0 22px, #28925a 22px 44px);
+  border: 3px solid var(--wood);
+  box-shadow: inset 0 0 30px rgba(0,0,0,.35), 0 8px 20px rgba(0,0,0,.35);
+  overflow: hidden;
+}
+
+.field-preview::before{
+  content:"";
+  position:absolute; inset: 12px 0;
+  background:
+    linear-gradient(transparent 0 calc(50% - 1.5px), rgba(255,255,255,.75) calc(50% - 1.5px) calc(50% + 1.5px), transparent calc(50% + 1.5px)),
+    repeating-linear-gradient(0deg, transparent 0 30px, rgba(255,255,255,.55) 30px 33px);
+  opacity: .85;
+}
+
+.fp-tag{
+  position: absolute;
+  left: 8px;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  padding: 3px 8px;
+  border-radius: 8px;
+  z-index: 3;
+}
+.fp-tag-start{ bottom: 8px; background: var(--blue); color: #fff; }
+.fp-tag-finish{ top: 8px; background: var(--red); color: #fff; }
+
+.fp-guard{
+  position: absolute;
+  left: 0;
+  font-size: 26px;
+  filter: drop-shadow(0 3px 3px rgba(0,0,0,.5));
+  animation: patrol 3.2s linear infinite alternate;
+  z-index: 2;
+}
+@keyframes patrol{
+  from{ transform: translateX(-40px) scaleX(-1); }
+  to{ transform: translateX(calc(100% + 40px)) scaleX(-1); }
+}
+
+.fp-player{
+  position: absolute;
+  left: 50%;
+  bottom: 20px;
+  font-size: 30px;
+  transform: translateX(-50%);
+  filter: drop-shadow(0 4px 4px rgba(0,0,0,.5));
+  animation: bob .8s ease-in-out infinite alternate;
+  z-index: 4;
+}
+@keyframes bob{ from{ transform: translate(-50%, 0);} to{ transform: translate(-50%, -8px);} }
+
+/* --- tombol menu --- */
+.menu-buttons{
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  margin-bottom: 16px;
+}
+
+.btn{
+  font-family: inherit;
+  font-weight: 900;
+  font-size: 15.5px;
+  letter-spacing: .8px;
+  border: none;
+  border-radius: 16px;
+  padding: 14px 18px;
+  cursor: pointer;
+  color: #fff;
+  transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+  position: relative;
+}
+.btn:active{ transform: translateY(3px) scale(.985); filter: brightness(.95); }
+
+.btn-primary{
+  background: linear-gradient(180deg, #ffd94d, #ffb800 55%, #e09b00);
+  color: #4a2f00;
+  box-shadow: 0 6px 0 #a87300, 0 10px 22px rgba(0,0,0,.4);
+}
+.btn-primary:hover{ box-shadow: 0 6px 0 #a87300, 0 12px 26px rgba(255,184,0,.4); }
+
+.btn-secondary{
+  background: linear-gradient(180deg, #3f9bff, #2f6fed 60%, #1f4fc0);
+  box-shadow: 0 6px 0 #17379a, 0 10px 22px rgba(0,0,0,.4);
+}
+.btn-ghost{
+  background: linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,.10));
+  border: 2px solid rgba(255,255,255,.5);
+  box-shadow: 0 5px 0 rgba(0,0,0,.3);
+}
+.btn-block{ width: 100%; }
+
+.highscore{
+  font-size: 17px;
+  font-weight: 900;
+  color: #ffe680;
+  margin-bottom: 4px;
+  text-shadow: 0 2px 6px rgba(0,0,0,.5);
+}
+.stats-mini{
+  font-size: 12.5px;
+  color: #9fd9bb;
+  letter-spacing: .5px;
+}
+
+/* ============================================================
+   GAME SCREEN
+   ============================================================ */
+#game-screen{
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 8px;
+  gap: 8px;
+  overflow: hidden;
+}
+
+/* --- HUD --- */
+.hud{
+  width: 100%;
+  max-width: 720px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 8px;
+  padding: 8px 10px;
+  background: linear-gradient(180deg, rgba(0,0,0,.5), rgba(0,0,0,.25));
+  border: 2px solid rgba(255,204,0,.35);
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0,0,0,.4);
+}
+
+.hud-item{
+  font-size: 13.5px;
+  font-weight: 900;
+  letter-spacing: .4px;
+  padding: 5px 10px;
+  border-radius: 10px;
+  background: rgba(255,255,255,.10);
+  border: 1px solid rgba(255,255,255,.15);
+  color: #eafff3;
+  white-space: nowrap;
+}
+.hud-item span{ color: #ffd94d; }
+
+#hud-time-box.warn{
+  background: rgba(230,57,70,.35);
+  border-color: var(--red);
+  animation: pulse .6s ease-in-out infinite alternate;
+}
+@keyframes pulse{ from{ transform: scale(1); } to{ transform: scale(1.07); } }
+
+.hud-tools{
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-mini{
+  font-size: 11.5px;
+  padding: 7px 10px;
+  border-radius: 10px;
+  letter-spacing: .3px;
+  background: linear-gradient(180deg, #3f9bff, #2f6fed);
+  box-shadow: 0 4px 0 #17379a;
+}
+
+.volume{
+  width: 68px;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255,255,255,.25);
+  border-radius: 99px;
+  outline: none;
+  cursor: pointer;
+}
+.volume::-webkit-slider-thumb{
+  -webkit-appearance: none;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--yellow);
+  border: 2px solid #8a6000;
+  box-shadow: 0 2px 6px rgba(0,0,0,.5);
+  cursor: pointer;
+}
+.volume::-moz-range-thumb{
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--yellow);
+  border: 2px solid #8a6000;
+  cursor: pointer;
+}
+
+/* --- canvas --- */
+#canvas-wrap{
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  max-width: 720px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#game{
+  display: block;
+  border-radius: 18px;
+  border: 4px solid var(--wood);
+  box-shadow: 0 14px 34px rgba(0,0,0,.55), inset 0 0 40px rgba(0,0,0,.3);
+  background: #2e9e63;
+  touch-action: none;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+#game.shake{
+  animation: shake .4s ease-in-out;
+}
+@keyframes shake{
+  0%,100%{ transform: translateX(0); }
+  20%{ transform: translateX(-8px) rotate(-1deg); }
+  40%{ transform: translateX(8px) rotate(1deg); }
+  60%{ transform: translateX(-6px); }
+  80%{ transform: translateX(6px); }
+}
+
+/* --- kontrol HP --- */
+.controls{
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0 8px;
+  flex: 0 0 auto;
+}
+.ctrl-row{ display: flex; gap: 8px; }
+
+.ctrl{
+  width: 62px; height: 62px;
+  border-radius: 18px;
+  border: 2px solid rgba(255,255,255,.4);
+  background: linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,.10));
+  color: #fff;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 5px 0 rgba(0,0,0,.4);
+  touch-action: none;
+  transition: transform .08s ease, background .08s ease;
+}
+.ctrl:active, .ctrl.active{
+  transform: translateY(3px);
+  background: linear-gradient(180deg, #ffd94d, #ffb800);
+  box-shadow: 0 2px 0 #a87300;
+}
+
+/* tampilkan kontrol HP saat layar sentuh atau sempit */
+@media (pointer: coarse), (max-width: 820px){
+  #game-screen .controls{ display: flex; }
+  .hud-item{ font-size: 12px; padding: 4px 8px; }
+}
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+.modal{
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(5, 25, 18, .78);
+  backdrop-filter: blur(5px);
+  z-index: 100;
+  overflow-y: auto;
+}
+.modal.show{ display: flex; animation: fadeIn .22s ease both; }
+@keyframes fadeIn{ from{ opacity: 0; } to{ opacity: 1; } }
+
+.modal-card{
+  width: 100%;
+  max-width: 440px;
+  background: linear-gradient(165deg, #16583c, #0d3b2a 70%);
+  border: 3px solid var(--yellow);
+  border-radius: 24px;
+  padding: 22px 20px;
+  box-shadow: 0 24px 60px rgba(0,0,0,.65), inset 0 1px 0 rgba(255,255,255,.12);
+  animation: pop .35s cubic-bezier(.2,1.3,.5,1) both;
+  position: relative;
+  z-index: 2;
+  max-height: 92vh;
+  overflow-y: auto;
+}
+.modal-card.center{ text-align: center; }
+
+.modal-title{
+  font-size: 23px;
+  letter-spacing: 2px;
+  color: #ffd94d;
+  text-align: center;
+  margin-bottom: 14px;
+  text-shadow: 0 3px 0 rgba(0,0,0,.35);
+  font-weight: 900;
+}
+
+.howto-list{
+  list-style: none;
+  counter-reset: step;
+  margin-bottom: 14px;
+}
+.howto-list li{
+  counter-increment: step;
+  position: relative;
+  padding: 9px 10px 9px 42px;
+  margin-bottom: 6px;
+  font-size: 13.8px;
+  line-height: 1.45;
+  background: rgba(255,255,255,.07);
+  border-left: 3px solid var(--green-light);
+  border-radius: 10px;
+  color: #eafff3;
+}
+.howto-list li::before{
+  content: counter(step);
+  position: absolute;
+  left: 10px; top: 50%;
+  transform: translateY(-50%);
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--yellow);
+  color: #4a2f00;
+  font-size: 12.5px;
+  font-weight: 900;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.tips{
+  background: rgba(255,204,0,.15);
+  border: 2px dashed rgba(255,204,0,.6);
+  border-radius: 12px;
+  padding: 11px 12px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #ffe680;
+  margin-bottom: 16px;
+}
+
+.big-points{
+  font-size: 36px;
+  font-weight: 900;
+  color: #7bffb0;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+  text-shadow: 0 4px 0 rgba(0,0,0,.35);
+  animation: pop .4s cubic-bezier(.2,1.6,.5,1) both;
+}
+
+.modal-text{
+  font-size: 14px;
+  line-height: 1.55;
+  color: #d6f5e4;
+  margin-bottom: 10px;
+}
+
+.emoji-big{
+  font-size: 58px;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.emoji-big.bounce{ animation: bounceEmoji .8s ease infinite alternate; }
+@keyframes bounceEmoji{ from{ transform: translateY(0) scale(1); } to{ transform: translateY(-12px) scale(1.08); } }
+
+.result-grid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 14px 0 16px;
+}
+.result-item{
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 12px;
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.result-item span{
+  font-size: 11px;
+  letter-spacing: .4px;
+  color: #9fd9bb;
+  font-weight: 700;
+}
+.result-item b{
+  font-size: 19px;
+  color: #ffd94d;
+  font-weight: 900;
+}
+
+.modal-buttons{
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* confetti */
+.confetti-layer{
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+.confetti-piece{
+  position: absolute;
+  top: -20px;
+  width: 10px;
+  height: 14px;
+  border-radius: 2px;
+  animation: fall linear forwards;
+}
+@keyframes fall{
+  to{ transform: translateY(110vh) rotate(720deg); opacity: .9; }
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-height: 720px){
+  .field-preview{ height: 118px; }
+  .title{ font-size: 32px; }
+  .desc{ font-size: 13.5px; margin-bottom: 12px; }
+  .btn{ padding: 12px 16px; font-size: 14.5px; }
+  .menu-inner{ padding: 16px 16px 20px; }
+}
+
+@media (max-width: 480px){
+  .hud{ gap: 5px; padding: 6px; }
+  .hud-item{ font-size: 11px; padding: 4px 7px; }
+  .btn-mini{ font-size: 10.5px; padding: 6px 8px; }
+  .volume{ width: 54px; }
+  .ctrl{ width: 58px; height: 58px; font-size: 22px; }
+  .modal-card{ padding: 18px 15px; }
+  .modal-title{ font-size: 20px; }
+  .result-item b{ font-size: 17px; }
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ================= MENU UTAMA ================= -->
+  <section id="menu-screen" class="screen show">
+    <div class="menu-inner">
+      <div class="flag">🇮🇩</div>
+      <h1 class="title">GOBAK SODOR</h1>
+      <p class="subtitle">Game Tradisional Indonesia</p>
+
+      <p class="desc">
+        "Uji kecepatan dan ketangkasanmu! Lewati para penjaga dan capai FINISH tanpa tertangkap."
+      </p>
+
+      <div class="field-preview" aria-hidden="true">
+        <div class="fp-tag fp-tag-finish">FINISH</div>
+        <div class="fp-tag fp-tag-start">START</div>
+        <span class="fp-guard" style="top:26%; animation-delay:-0.4s">🧍</span>
+        <span class="fp-guard" style="top:56%; animation-delay:-1.6s">🧍</span>
+        <span class="fp-player">🏃</span>
+      </div>
+
+      <div class="menu-buttons">
+        <button id="btn-start" class="btn btn-primary">▶ MULAI BERMAIN</button>
+        <button id="btn-howto" class="btn btn-secondary">📖 CARA BERMAIN</button>
+        <button id="btn-music-menu" class="btn btn-ghost">🔊 MUSIK ON</button>
+      </div>
+
+      <div class="highscore">🏆 Skor Tertinggi: <span id="menu-highscore">0</span></div>
+      <div class="stats-mini" id="menu-stats">🎮 0 permainan · 🏅 0 menang · 💔 0 kalah</div>
+    </div>
+  </section>
+
+  <!-- ================= ARENA GAME ================= -->
+  <section id="game-screen" class="screen">
+    <div class="hud">
+      <div class="hud-item" id="hud-time-box">⏱️ Waktu: <span id="hud-time">60</span></div>
+      <div class="hud-item">❤️ Nyawa: <span id="hud-lives">3</span></div>
+      <div class="hud-item">⭐ Skor: <span id="hud-score">0</span></div>
+      <div class="hud-item">🎯 Level: <span id="hud-level">1</span></div>
+      <div class="hud-tools">
+        <button id="btn-music-game" class="btn btn-mini">🔊 Musik</button>
+        <input id="volume" class="volume" type="range" min="0" max="100" value="60" aria-label="Volume musik" />
+        <button id="btn-quit" class="btn btn-mini">🏠 Menu</button>
+      </div>
+    </div>
+
+    <div id="canvas-wrap">
+      <canvas id="game" width="400" height="620"></canvas>
+    </div>
+
+    <div class="controls" id="controls">
+      <button class="ctrl ctrl-up" data-dir="up" aria-label="Atas">⬆️</button>
+      <div class="ctrl-row">
+        <button class="ctrl" data-dir="left" aria-label="Kiri">⬅️</button>
+        <button class="ctrl" data-dir="down" aria-label="Bawah">⬇️</button>
+        <button class="ctrl" data-dir="right" aria-label="Kanan">➡️</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ================= MODAL CARA BERMAIN ================= -->
+<div id="modal-howto" class="modal">
+  <div class="modal-card">
+    <h2 class="modal-title">📖 CARA BERMAIN</h2>
+    <ol class="howto-list">
+      <li>Tekan tombol <b>Mulai Bermain</b>.</li>
+      <li>Gerakkan karakter menggunakan <b>W, A, S, D</b> atau tombol panah.</li>
+      <li>Pada HP gunakan tombol arah di layar.</li>
+      <li>Hindari penjaga yang bergerak di garis lapangan.</li>
+      <li>Capai area <b>FINISH</b>.</li>
+      <li>Jika tertangkap penjaga, nyawa akan berkurang.</li>
+      <li>Selesaikan semua level untuk memenangkan permainan.</li>
+      <li>Semakin cepat mencapai FINISH, semakin besar skor yang didapat.</li>
+    </ol>
+    <div class="tips">
+      💡 <b>Tips:</b> "Perhatikan gerakan penjaga dan tunggu waktu yang tepat untuk melewati garis."
+    </div>
+    <button id="btn-close-howto" class="btn btn-primary btn-block">Tutup</button>
+  </div>
+</div>
+
+<!-- ================= MODAL LEVEL SELESAI ================= -->
+<div id="modal-level" class="modal">
+  <div class="modal-card center">
+    <h2 class="modal-title" id="level-title">🎯 LEVEL SELESAI!</h2>
+    <div class="big-points" id="level-points">+100 poin</div>
+    <p class="modal-text" id="level-detail">Poin dasar 100 + bonus waktu</p>
+    <p class="modal-text">Siap menghadapi level berikutnya?</p>
+    <button id="btn-next-level" class="btn btn-primary btn-block">Lanjut ➡️</button>
+  </div>
+</div>
+
+<!-- ================= MODAL GAME OVER ================= -->
+<div id="modal-gameover" class="modal">
+  <div class="modal-card center">
+    <div class="emoji-big">😢</div>
+    <h2 class="modal-title">GAME OVER</h2>
+    <p class="modal-text" id="go-reason">Jangan menyerah, coba lagi!</p>
+
+    <div class="result-grid">
+      <div class="result-item"><span>⭐ Skor</span><b id="go-score">0</b></div>
+      <div class="result-item"><span>🏆 Skor Tertinggi</span><b id="go-high">0</b></div>
+      <div class="result-item"><span>🎯 Level Tercapai</span><b id="go-level">1</b></div>
+      <div class="result-item"><span>❤️ Nyawa</span><b id="go-lives">0</b></div>
+    </div>
+
+    <div class="modal-buttons">
+      <button id="btn-retry" class="btn btn-primary">🔄 COBA LAGI</button>
+      <button id="btn-menu-go" class="btn btn-secondary">🏠 KEMBALI KE MENU</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL PEMENANGAN ================= -->
+<div id="modal-win" class="modal">
+  <div class="confetti-layer" id="confetti"></div>
+  <div class="modal-card center">
+    <div class="emoji-big bounce">🎉</div>
+    <h2 class="modal-title">SELAMAT!</h2>
+    <p class="modal-text">"Kamu berhasil menyelesaikan Gobak Sodor!"</p>
+
+    <div class="result-grid">
+      <div class="result-item"><span>⭐ Skor Akhir</span><b id="win-score">0</b></div>
+      <div class="result-item"><span>🏆 Skor Tertinggi</span><b id="win-high">0</b></div>
+      <div class="result-item"><span>⏱️ Total Waktu</span><b id="win-time">0</b></div>
+      <div class="result-item"><span>🎯 Level Selesai</span><b id="win-level">3</b></div>
+    </div>
+
+    <div class="modal-buttons">
+      <button id="btn-play-again" class="btn btn-primary">🔄 MAIN LAGI</button>
+      <button id="btn-menu-win" class="btn btn-secondary">🏠 KEMBALI KE MENU</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   GOBAK SODOR — Game Logic
+   HTML5 Canvas + Web Audio API + localStorage
+   ============================================================ */
+(function () {
+  "use strict";
+
+  /* ---------- SHORTCUT ---------- */
+  const $ = (id) => document.getElementById(id);
+
+  /* ---------- DOM ELEMENTS ---------- */
+  const menuScreen   = $("menu-screen");
+  const gameScreen   = $("game-screen");
+  const canvas       = $("game");
+  const ctx          = canvas.getContext("2d");
+  const canvasWrap   = $("canvas-wrap");
+
+  const hudTime      = $("hud-time");
+  const hudTimeBox   = $("hud-time-box");
+  const hudLives     = $("hud-lives");
+  const hudScore     = $("hud-score");
+  const hudLevel     = $("hud-level");
+
+  const menuHighEl   = $("menu-highscore");
+  const menuStatsEl  = $("menu-stats");
+
+  const modalHowto   = $("modal-howto");
+  const modalLevel   = $("modal-level");
+  const modalGameover= $("modal-gameover");
+  const modalWin     = $("modal-win");
+  const confettiBox  = $("confetti");
+
+  const btnStart     = $("btn-start");
+  const btnHowto     = $("btn-howto");
+  const btnMusicMenu = $("btn-music-menu");
+  const btnMusicGame = $("btn-music-game");
+  const btnCloseHowto= $("btn-close-howto");
+  const btnNextLevel = $("btn-next-level");
+  const btnRetry     = $("btn-retry");
+  const btnMenuGo    = $("btn-menu-go");
+  const btnPlayAgain = $("btn-play-again");
+  const btnMenuWin   = $("btn-menu-win");
+  const btnQuit      = $("btn-quit");
+  const volumeSlider = $("volume");
+
+  /* ============================================================
+     LOCAL STORAGE
+     ============================================================ */
+  const STORE_KEY = "gobakSodorStats_v1";
+  let stats = { high: 0, plays: 0, wins: 0, losses: 0 };
+
+  function loadStats() {
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === "object") {
+          stats.high   = Number(parsed.high)   || 0;
+          stats.plays  = Number(parsed.plays)  || 0;
+          stats.wins   = Number(parsed.wins)   || 0;
+          stats.losses = Number(parsed.losses) || 0;
+        }
+      }
+    } catch (e) { /* localStorage tidak tersedia */ }
+  }
+
+  function saveStats() {
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify(stats));
+    } catch (e) { /* ignore */ }
+  }
+
+  function updateMenuStats() {
+    menuHighEl.textContent = stats.high;
+    menuStatsEl.textContent =
+      "🎮 " + stats.plays + " permainan · 🏅 " + stats.wins + " menang · 💔 " + stats.losses + " kalah";
+  }
+
+  /* ============================================================
+     AUDIO ENGINE — Web Audio API
+     ============================================================ */
+  const Audio = (function () {
+    let audioCtx = null;
+    let masterGain = null;
+    let musicGain = null;
+    let sfxGain = null;
+    let musicPlaying = false;
+    let musicTimer = null;
+    let musicStep = 0;
+    let enabled = true;
+    let volume = 0.6;
+
+    function init() {
+      if (audioCtx) return;
+      const Ctor = window.AudioContext || window.webkitAudioContext;
+      if (!Ctor) return;
+      audioCtx = new Ctor();
+
+      masterGain = audioCtx.createGain();
+      masterGain.gain.value = 0.9;
+      masterGain.connect(audioCtx.destination);
+
+      musicGain = audioCtx.createGain();
+      musicGain.gain.value = volume * 0.35;
+      musicGain.connect(masterGain);
+
+      sfxGain = audioCtx.createGain();
+      sfxGain.gain.value = 0.55;
+      sfxGain.connect(masterGain);
+    }
+
+    function resume() {
+      if (audioCtx && audioCtx.state === "suspended") {
+        audioCtx.resume().catch(() => {});
+      }
+    }
+
+    function setVolume(v) {
+      volume = Math.max(0, Math.min(1, v));
+      if (musicGain) musicGain.gain.value = volume * 0.35;
+      if (sfxGain) sfxGain.gain.value = Math.min(0.8, volume * 0.9);
+    }
+
+    function setEnabled(on) {
+      enabled = !!on;
+      if (masterGain) masterGain.gain.value = enabled ? 0.9 : 0;
+      if (enabled) {
+        resume();
+        if (!musicPlaying) startMusic();
+      } else {
+        stopMusic();
+      }
+      return enabled;
+    }
+
+    function toggle() { return setEnabled(!enabled); }
+    function isEnabled() { return enabled; }
+
+    /* ----- tone helper ----- */
+    function tone(freq, dur, type, gainVal, when) {
+      if (!audioCtx || !enabled) return;
+      const t0 = (when !== undefined ? when : audioCtx.currentTime);
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.type = type || "square";
+      osc.frequency.setValueAtTime(freq, t0);
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(gainVal || 0.18, t0 + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      osc.connect(g);
+      g.connect(sfxGain || masterGain);
+      osc.start(t0);
+      osc.stop(t0 + dur + 0.03);
+    }
+
+    /* ----- SFX ----- */
+    function sfxClick() {
+      init(); resume();
+      tone(720, 0.06, "square", 0.16);
+      tone(980, 0.05, "square", 0.10, audioCtx ? audioCtx.currentTime + 0.05 : 0);
+    }
+
+    function sfxMove() {
+      if (!audioCtx || !enabled) return;
+      tone(420, 0.035, "triangle", 0.045);
+    }
+
+    function sfxCatch() {
+      init(); resume();
+      if (!audioCtx || !enabled) return;
+      const t = audioCtx.currentTime;
+      tone(300, 0.12, "sawtooth", 0.22, t);
+      tone(180, 0.22, "sawtooth", 0.22, t + 0.10);
+      tone(120, 0.30, "square", 0.18, t + 0.22);
+    }
+
+    function sfxLevelComplete() {
+      init(); resume();
+      if (!audioCtx || !enabled) return;
+      const t = audioCtx.currentTime;
+      const notes = [523.25, 659.25, 783.99, 1046.5];
+      notes.forEach((f, i) => tone(f, 0.18, "triangle", 0.20, t + i * 0.10));
+    }
+
+    function sfxWin() {
+      init(); resume();
+      if (!audioCtx || !enabled) return;
+      const t = audioCtx.currentTime;
+      const notes = [523.25, 659.25, 783.99, 1046.5, 1318.5, 1567.98];
+      notes.forEach((f, i) => tone(f, 0.22, "triangle", 0.22, t + i * 0.12));
+      tone(1046.5, 0.6, "sine", 0.18, t + 0.75);
+    }
+
+    function sfxGameOver() {
+      init(); resume();
+      if (!audioCtx || !enabled) return;
+      const t = audioCtx.currentTime;
+      const notes = [440, 392, 349.23, 293.66, 261.63];
+      notes.forEach((f, i) => tone(f, 0.24, "sawtooth", 0.18, t + i * 0.16));
+    }
+
+    function sfxBonus() {
+      init(); resume();
+      if (!audioCtx || !enabled) return;
+      const t = audioCtx.currentTime;
+      tone(880, 0.10, "square", 0.16, t);
+      tone(1174.66, 0.14, "square", 0.14, t + 0.09);
+    }
+
+    /* ----- MUSIC (loop sederhana nuansa gamelan/pentatonik) ----- */
+    const MELODY = [
+      523.25, 587.33, 659.25, 783.99, 880.00,
+      783.99, 659.25, 587.33, 523.25, 440.00,
+      523.25, 659.25, 783.99, 659.25, 523.25,
+      587.33, 523.25, 440.00, 392.00, 440.00
+    ];
+    const BASS = [
+      130.81, 130.81, 146.83, 146.83,
+      164.81, 164.81, 130.81, 130.81,
+      174.61, 174.61, 196.00, 196.00,
+      146.83, 146.83, 130.81, 130.81
+    ];
+
+    function playMusicStep() {
+      if (!audioCtx || !musicPlaying || !enabled) return;
+      const t = audioCtx.currentTime;
+      const step = musicStep;
+
+      // melody
+      const mel = MELODY[step % MELODY.length];
+      scheduleNote(mel, 0.28, "triangle", 0.16, t);
+
+      // harmony (satu oktaf di bawah, delay sedikit)
+      scheduleNote(mel / 2, 0.30, "sine", 0.09, t + 0.02);
+
+      // bass tiap 2 step
+      if (step % 2 === 0) {
+        const bass = BASS[(step / 2) % BASS.length];
+        scheduleNote(bass, 0.42, "sine", 0.18, t);
+      }
+
+      // perkusi ringan
+      if (step % 4 === 2) {
+        scheduleNote(160, 0.06, "square", 0.05, t);
+      }
+
+      musicStep++;
+    }
+
+    function scheduleNote(freq, dur, type, gainVal, when) {
+      if (!audioCtx || !enabled || !musicPlaying) return;
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, when);
+      g.gain.setValueAtTime(0.0001, when);
+      g.gain.exponentialRampToValueAtTime(gainVal, when + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+      osc.connect(g);
+      g.connect(musicGain);
+      osc.start(when);
+      osc.stop(when + dur + 0.05);
+    }
+
+    function startMusic() {
+      init(); resume();
+      if (!audioCtx || musicPlaying || !enabled) return;
+      musicPlaying = true;
+      musicStep = 0;
+      // mainkan langsung beberapa step agar tidak delay
+      playMusicStep();
+      musicTimer = setInterval(playMusicStep, 300);
+    }
+
+    function stopMusic() {
+      musicPlaying = false;
+      if (musicTimer) {
+        clearInterval(musicTimer);
+        musicTimer = null;
+      }
+    }
+
+    return {
+      init, resume, setVolume, setEnabled, toggle, isEnabled,
+      sfxClick, sfxMove, sfxCatch, sfxLevelComplete, sfxWin, sfxGameOver, sfxBonus,
+      startMusic, stopMusic
+    };
+  })();
+
+  /* ============================================================
+     GAME CONSTANTS
+     ============================================================ */
+  const BASE_W = 400;
+  const BASE_H = 620;
+
+  const START_Y = BASE_H - 70;
+  const FINISH_Y = 72;
+
+  const PLAYER_RADIUS = 17;
+  const GUARD_RADIUS = 17;
+
+  const PLAYER_SPEED = 235;   // px per second
+
+  const LEVELS = [
+    { level: 1, guards: 2, guardSpeed: 95,  time: 60 },
+    { level: 2, guards: 3, guardSpeed: 130, time: 50 },
+    { level: 3, guards: 4, guardSpeed: 165, time: 40 }
+  ];
+
+  const BASE_POINT = 100;
+  const TIME_BONUS_MULT = 5;
+  const PENALTY_POINT = 25;
+  const WIN_BONUS = 500;
+
+  /* ============================================================
+     GAME STATE
+     ============================================================ */
+  const game = {
+    running: false,
+    paused: false,
+    levelIndex: 0,
+    lives: 3,
+    score: 0,
+    timeLeft: 60,
+    totalTime: 0,
+    lastTime: 0,
+    catchCooldown: 0,
+    hitFlash: 0,
+    player: { x: BASE_W / 2, y: START_Y, vx: 0, vy: 0, facing: "up", bob: 0 },
+    guards: [],
+    input: { up: false, down: false, left: false, right: false },
+    lineYs: [],
+    rafId: null,
+    elapsed: 0
+  };
+
+  /* ============================================================
+     RESIZE / SCALE
+     ============================================================ */
+  let viewScale = 1;
+  let viewW = BASE_W;
+  let viewH = BASE_H;
+
+  function layout() {
+    const wrapRect = canvasWrap.getBoundingClientRect();
+    const availW = Math.max(200, wrapRect.width - 4);
+    const availH = Math.max(240, wrapRect.height - 4);
+
+    const scale = Math.min(availW / BASE_W, availH / BASE_H);
+    viewScale = Math.max(0.3, scale);
+
+    viewW = BASE_W * viewScale;
+    viewH = BASE_H * viewScale;
+
+    // ukuran CSS
+    canvas.style.width = viewW + "px";
+    canvas.style.height = viewH + "px";
+
+    // ukuran internal (tinggi resolusi untuk layar retina, tapi dibatasi)
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(BASE_W * viewScale * dpr);
+    canvas.height = Math.round(BASE_H * viewScale * dpr);
+
+    ctx.setTransform(canvas.width / BASE_W, 0, 0, canvas.height / BASE_H, 0, 0);
+  }
+
+  /* ============================================================
+     LAYOUT LAPANGAN
+     ============================================================ */
+  function buildField() {
+    // 4 garis horizontal yang dijaga (tidak termasuk start/finish)
+    const top = FINISH_Y + 90;
+    const bottom = START_Y - 90;
+    const count = 4;
+    game.lineYs = [];
+    for (let i = 0; i < count; i++) {
+      game.lineYs.push(top + ((bottom - top) * i) / (count - 1));
+    }
+  }
+
+  /* ============================================================
+     BUAT PENJAGA
+     ============================================================ */
+  function spawnGuards(levelCfg) {
+    game.guards = [];
+    const lines = game.lineYs;
+
+    for (let i = 0; i < levelCfg.guards; i++) {
+      const lineY = lines[i % lines.length];
+      const direction = (i % 2 === 0) ? 1 : -1;
+      const startX = direction === 1 ? 60 : BASE_W - 60;
+
+      game.guards.push({
+        x: startX,
+        y: lineY,
+        dir: direction,
+        speed: levelCfg.guardSpeed * (0.85 + Math.random() * 0.3),
+        minX: 45,
+        maxX: BASE_W - 45,
+        wobble: Math.random() * Math.PI * 2
+      });
+    }
+  }
+
+  /* ============================================================
+     MULAI LEVEL
+     ============================================================ */
+  function startLevel(index) {
+    game.levelIndex = index;
+    const cfg = LEVELS[index];
+
+    game.lives = 3;
+    game.timeLeft = cfg.time;
+    game.catchCooldown = 0;
+    game.hitFlash = 0;
+
+    resetPlayerPosition();
+    buildField();
+    spawnGuards(cfg);
+
+    updateHUD();
+
+    game.running = true;
+    game.paused = false;
+    game.lastTime = performance.now();
+
+    hideAllModals();
+
+    Audio.setEnabled(true);
+    Audio.startMusic();
+
+    if (!game.rafId) {
+      game.rafId = requestAnimationFrame(loop);
+    }
+  }
+
+  function resetPlayerPosition() {
+    game.player.x = BASE_W / 2;
+    game.player.y = START_Y;
+    game.player.vx = 0;
+    game.player.vy = 0;
+    game.player.facing = "up";
+    game.player.bob = 0;
+  }
+
+  /* ============================================================
+     HUD UPDATE
+     ============================================================ */
+  function updateHUD() {
+    hudTime.textContent = Math.max(0, Math.ceil(game.timeLeft));
+    hudLives.textContent = game.lives;
+    hudScore.textContent = Math.max(0, game.score);
+    hudLevel.textContent = game.levelIndex + 1;
+
+    if (game.timeLeft <= 10) {
+      hudTimeBox.classList.add("warn");
+    } else {
+      hudTimeBox.classList.remove("warn");
+    }
+  }
+
+  /* ============================================================
+     GAME LOOP
+     ============================================================ */
+  function loop(now) {
+    game.rafId = requestAnimationFrame(loop);
+
+    let dt = (now - game.lastTime) / 1000;
+    game.lastTime = now;
+    if (dt > 0.1) dt = 0.1;     // clamp untuk stabilitas
+    if (dt < 0) dt = 0;
+
+    if (game.running && !game.paused) {
+      update(dt);
+    }
+    render();
+  }
+
+  /* ============================================================
+     UPDATE LOGIC
+     ============================================================ */
+  function update(dt) {
+    game.elapsed += dt;
+
+    /* ---- timer ---- */
+    if (game.timeLeft > 0) {
+      game.timeLeft -= dt;
+      if (game.timeLeft <= 0) {
+        game.timeLeft = 0;
+        updateHUD();
+        triggerGameOver("Waktu habis!");
+        return;
+      }
+    }
+    game.totalTime += dt;
+
+    /* ---- player movement ---- */
+    const p = game.player;
+    let mx = 0, my = 0;
+    if (game.input.left)  mx -= 1;
+    if (game.input.right) mx += 1;
+    if (game.input.up)    my -= 1;
+    if (game.input.down)  my += 1;
+
+    const len = Math.hypot(mx, my);
+    if (len > 0) {
+      mx /= len; my /= len;
+      p.facing = Math.abs(mx) > Math.abs(my) ? (mx > 0 ? "right" : "left") : (my > 0 ? "down" : "up");
+      p.bob += dt * 12;
+      // SFX gerak sesekali
+      if (Math.random() < dt * 3) Audio.sfxMove();
+    } else {
+      p.bob *= 0.9;
+    }
+
+    p.x += mx * PLAYER_SPEED * dt;
+    p.y += my * PLAYER_SPEED * dt;
+
+    // batas arena
+    const m = PLAYER_RADIUS + 4;
+    if (p.x < m) p.x = m;
+    if (p.x > BASE_W - m) p.x = BASE_W - m;
+    if (p.y < m) p.y = m;
+    if (p.y > BASE_H - m) p.y = BASE_H - m;
+
+    /* ---- guards update ---- */
+    for (const g of game.guards) {
+      g.x += g.dir * g.speed * dt;
+      g.wobble += dt * 6;
+
+      if (g.x <= g.minX) { g.x = g.minX; g.dir = 1; }
+      if (g.x >= g.maxX) { g.x = g.maxX; g.dir = -1; }
+    }
+
+    /* ---- collision ---- */
+    if (game.catchCooldown > 0) {
+      game.catchCooldown -= dt;
+    }
+
+    if (game.catchCooldown <= 0) {
+      for (const g of game.guards) {
+        const dx = p.x - g.x;
+        const dy = p.y - g.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < PLAYER_RADIUS + GUARD_RADIUS - 3) {
+          onCaught();
+          break;
+        }
+      }
+    }
+
+    /* ---- finish ---- */
+    if (p.y <= FINISH_Y - 6) {
+      onLevelComplete();
+      return;
+    }
+
+    /* ---- hit flash timer ---- */
+    if (game.hitFlash > 0) {
+      game.hitFlash -= dt;
+      if (game.hitFlash < 0) game.hitFlash = 0;
+    }
+
+    updateHUD();
+  }
+
+  /* ============================================================
+     COLLISION -> TERTANGKAP
+     ============================================================ */
+  function onCaught() {
+    Audio.sfxCatch();
+    game.lives -= 1;
+    game.score = Math.max(0, game.score - PENALTY_POINT);
+    game.hitFlash = 0.45;
+    game.catchCooldown = 1.4;   // kebal sementara
+
+    // efek visual
+    canvas.classList.add("shake");
+    setTimeout(() => canvas.classList.remove("shake"), 420);
+
+    updateHUD();
+    resetPlayerPosition();
+
+    if (game.lives <= 0) {
+      triggerGameOver("Nyawa habis!");
+    }
+  }
+
+  /* ============================================================
+     LEVEL COMPLETE
+     ============================================================ */
+  function onLevelComplete() {
+    game.running = false;
+    game.paused = true;
+    Audio.sfxLevelComplete();
+
+    const cfg = LEVELS[game.levelIndex];
+    const bonus = Math.floor(Math.max(0, game.timeLeft) * TIME_BONUS_MULT);
+    const gained = BASE_POINT + bonus;
+    game.score += gained;
+
+    updateHUD();
+    saveStats();
+
+    // isi modal
+    $("level-points").textContent = "+" + gained + " poin";
+    $("level-detail").textContent =
+      "Poin dasar " + BASE_POINT + " + bonus waktu " + bonus + " (sisa " +
+      Math.ceil(game.timeLeft) + "s)";
+
+    const isLast = game.levelIndex >= LEVELS.length - 1;
+
+    if (isLast) {
+      // langsung ke kemenangan
+      onWin();
+      return;
+    }
+
+    $("level-title").textContent = "🎯 LEVEL " + (game.levelIndex + 1) + " SELESAI!";
+    showModal(modalLevel);
+  }
+
+  /* ============================================================
+     NEXT LEVEL
+     ============================================================ */
+  function nextLevel() {
+    hideAllModals();
+    const nextIdx = game.levelIndex + 1;
+    if (nextIdx >= LEVELS.length) {
+      onWin();
+      return;
+    }
+    startLevel(nextIdx);
+  }
+
+  /* ============================================================
+     GAME OVER
+     ============================================================ */
+  function triggerGameOver(reason) {
+    if (!game.running && game.paused) return;
+    game.running = false;
+    game.paused = true;
+    Audio.stopMusic();
+    Audio.sfxGameOver();
+
+    stats.losses += 1;
+    stats.plays += 1;
+    if (game.score > stats.high) stats.high = game.score;
+    saveStats();
+    updateMenuStats();
+
+    $("go-reason").textContent = (reason || "Jangan menyerah, coba lagi!") + " Jangan menyerah, coba lagi!";
+    $("go-score").textContent = Math.max(0, game.score);
+    $("go-high").textContent = stats.high;
+    $("go-level").textContent = game.levelIndex + 1;
+    $("go-lives").textContent = Math.max(0, game.lives);
+
+    showModal(modalGameover);
+  }
+
+  /* ============================================================
+     MENANG
+     ============================================================ */
+  function onWin() {
+    game.running = false;
+    game.paused = true;
+    Audio.stopMusic();
+
+    // bonus kemenangan
+    game.score += WIN_BONUS;
+    Audio.sfxWin();
+    Audio.sfxBonus();
+
+    stats.wins += 1;
+    stats.plays += 1;
+    if (game.score > stats.high) stats.high = game.score;
+    saveStats();
+    updateMenuStats();
+
+    $("win-score").textContent = game.score;
+    $("win-high").textContent = stats.high;
+    $("win-time").textContent = Math.round(game.totalTime) + "s";
+    $("win-level").textContent = LEVELS.length;
+
+    showModal(modalWin);
+    launchConfetti();
+  }
+
+  /* ============================================================
+     CONFETTI
+     ============================================================ */
+  function launchConfetti() {
+    confettiBox.innerHTML = "";
+    const colors = ["#ffcc00", "#e63946", "#2f6fed", "#3fbf7f", "#ff8f3f", "#ffffff", "#c08a4b"];
+    const total = 90;
+
+    for (let i = 0; i < total; i++) {
+      const piece = document.createElement("div");
+      piece.className = "confetti-piece";
+      piece.style.left = Math.random() * 100 + "%";
+      piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+      piece.style.width = (6 + Math.random() * 8) + "px";
+      piece.style.height = (8 + Math.random() * 12) + "px";
+      piece.style.animationDuration = (2.2 + Math.random() * 2.6) + "s";
+      piece.style.animationDelay = (Math.random() * 0.8) + "s";
+      piece.style.opacity = 0.85 + Math.random() * 0.15;
+      confettiBox.appendChild(piece);
+    }
+
+    setTimeout(() => { confettiBox.innerHTML = ""; }, 6000);
+  }
+
+  /* ============================================================
+     RENDER
+     ============================================================ */
+  function render() {
+    const W = BASE_W, H = BASE_H;
+
+    /* ---- background lapangan ---- */
+    // rumput bergaris
+    const stripeH = 44;
+    for (let y = 0; y < H; y += stripeH) {
+      ctx.fillStyle = (Math.floor(y / stripeH) % 2 === 0) ? "#2e9e63" : "#28925a";
+      ctx.fillRect(0, y, W, stripeH);
+    }
+
+    // garis-garis lapangan
+    ctx.save();
+    ctx.strokeStyle = "rgba(255,255,255,0.85)";
+    ctx.lineWidth = 3;
+    ctx.setLineDash([]);
+
+    // garis horizontal (jalur penjaga)
+    for (const y of game.lineYs) {
+      ctx.beginPath();
+      ctx.moveTo(10, y);
+      ctx.lineTo(W - 10, y);
+      ctx.stroke();
+    }
+
+    // garis vertikal di tengah
+    ctx.beginPath();
+    ctx.moveTo(W / 2, FINISH_Y);
+    ctx.lineTo(W / 2, START_Y);
+    ctx.stroke();
+    ctx.restore();
+
+    /* ---- area FINISH ---- */
+    const gradFinish = ctx.createLinearGradient(0, 0, 0, FINISH_Y);
+    gradFinish.addColorStop(0, "rgba(230,57,70,0.55)");
+    gradFinish.addColorStop(1, "rgba(230,57,70,0.0)");
+    ctx.fillStyle = gradFinish;
+    ctx.fillRect(0, 0, W, FINISH_Y);
+
+    // garis finish (kotak-kotak)
+    const sq = 14;
+    for (let x = 0, i = 0; x < W; x += sq, i++) {
+      for (let y = FINISH_Y - sq * 2, j = 0; y < FINISH_Y; y += sq, j++) {
+        ctx.fillStyle = ((i + j) % 2 === 0) ? "#ffffff" : "#111111";
+        ctx.fillRect(x, y, sq, sq);
+      }
+    }
+
+    // label FINISH
+    ctx.save();
+    ctx.font = "900 16px 'Trebuchet MS', sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "rgba(0,0,0,0.35)";
+    ctx.fillRect(W / 2 - 52, FINISH_Y - 30, 104, 24);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText("🏁 FINISH", W / 2, FINISH_Y - 18);
+    ctx.restore();
+
+    /* ---- area START ---- */
+    const gradStart = ctx.createLinearGradient(0, START_Y - 30, 0, H);
+    gradStart.addColorStop(0, "rgba(47,111,237,0.0)");
+    gradStart.addColorStop(1, "rgba(47,111,237,0.55)");
+    ctx.fillStyle = gradStart;
+    ctx.fillRect(0, START_Y - 30, W, H - (START_Y - 30));
+
+    ctx.save();
+    ctx.font = "900 15px 'Trebuchet MS', sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "rgba(0,0,0,0.35)";
+    ctx.fillRect(W / 2 - 48, START_Y + 18, 96, 22);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText("🚩 START", W / 2, START_Y + 30);
+    ctx.restore();
+
+    /* ---- guards ---- */
+    for (const g of game.guards) {
+      drawGuard(g);
+    }
+
+    /* ---- player ---- */
+    drawPlayer(game.player);
+
+    /* ---- hit flash ---- */
+    if (game.hitFlash > 0) {
+      ctx.save();
+      ctx.globalAlpha = Math.min(0.55, game.hitFlash * 1.2);
+      ctx.fillStyle = "#ff2e3f";
+      ctx.fillRect(0, 0, W, H);
+      ctx.restore();
+    }
+
+    /* ---- tanda level & instruksi kecil ---- */
+    ctx.save();
+    ctx.font = "700 11px 'Trebuchet MS', sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "rgba(255,255,255,0.55)";
+    ctx.fillText("LEVEL " + (game.levelIndex + 1) + " — capai FINISH di atas!", W / 2, H - 12);
+    ctx.restore();
+  }
+
+  /* ---------- gambar karakter pemain ---------- */
+  function drawPlayer(p) {
+    const r = PLAYER_RADIUS;
+    const bob = Math.sin(p.bob) * 2;
+
+    ctx.save();
+    ctx.translate(p.x, p.y + bob);
+
+    // bayangan
+    ctx.beginPath();
+    ctx.ellipse(0, r - 1, r * 0.9, r * 0.35, 0, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(0,0,0,0.30)";
+    ctx.fill();
+
+    // badan
+    const grd = ctx.createRadialGradient(-4, -6, 2, 0, 0, r + 6);
+    grd.addColorStop(0, "#ffe680");
+    grd.addColorStop(0.55, "#ffcc00");
+    grd.addColorStop(1, "#e09b00");
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
+    ctx.fillStyle = grd;
+    ctx.fill();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = "#7a5200";
+    ctx.stroke();
+
+    // mata berdasarkan arah
+    const eyeOffX = p.facing === "left" ? -4 : (p.facing === "right" ? 4 : 0);
+    const eyeOffY = p.facing === "up" ? -4 : (p.facing === "down" ? 4 : 0);
+    ctx.fillStyle = "#2b1a00";
+    ctx.beginPath();
+    ctx.arc(-5 + eyeOffX, -3 + eyeOffY, 2.4, 0, Math.PI * 2);
+    ctx.arc(5 + eyeOffX, -3 + eyeOffY, 2.4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // senyum
+    ctx.beginPath();
+    ctx.arc(eyeOffX, 3 + eyeOffY, 5, 0.15 * Math.PI, 0.85 * Math.PI);
+    ctx.strokeStyle = "#2b1a00";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // mahkota kecil / ikon pemain
+    ctx.font = "900 12px 'Trebuchet MS', sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText("YOU", 0, -r - 9);
+
+    ctx.restore();
+  }
+
+  /* ---------- gambar penjaga ---------- */
+  function drawGuard(g) {
+    const r = GUARD_RADIUS;
+    const bob = Math.sin(g.wobble) * 2;
+
+    ctx.save();
+    ctx.translate(g.x, g.y + bob);
+
+    // bayangan
+    ctx.beginPath();
+    ctx.ellipse(0, r - 1, r * 0.9, r * 0.35, 0, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(0,0,0,0.30)";
+    ctx.fill();
+
+    // badan
+    const grd = ctx.createRadialGradient(-4, -6, 2, 0, 0, r + 6);
+    grd.addColorStop(0, "#ff8f8f");
+    grd.addColorStop(0.55, "#e63946");
+    grd.addColorStop(1, "#a11d29");
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
+    ctx.fillStyle = grd;
+    ctx.fill();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = "#6d0f18";
+    ctx.stroke();
+
+    // mata tajam
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.arc(-5, -3, 3.4, 0, Math.PI * 2);
+    ctx.arc(5, -3, 3.4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#111";
+    const px = g.dir > 0 ? 1.4 : -1.4;
+    ctx.beginPath();
+    ctx.arc(-5 + px, -3, 1.7, 0, Math.PI * 2);
+    ctx.arc(5 + px, -3, 1.7, 0, Math.PI * 2);
+    ctx.fill();
+
+    // alis galak
+    ctx.strokeStyle = "#3a0508";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(-8, -8); ctx.lineTo(-2, -6);
+    ctx.moveTo(8, -8);  ctx.lineTo(2, -6);
+    ctx.stroke();
+
+    // label
+    ctx.font = "900 11px 'Trebuchet MS', sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText("JAGA", 0, -r - 9);
+
+    ctx.restore();
+  }
+
+  /* ============================================================
+     MODAL HELPERS
+     ============================================================ */
+  function showModal(el) {
+    el.classList.add("show");
+    game.paused = true;
+  }
+  function hideModal(el) { el.classList.remove("show"); }
+  function hideAllModals() {
+    [modalHowto, modalLevel, modalGameover, modalWin].forEach(hideModal);
+  }
+
+  /* ============================================================
+     INPUT — KEYBOARD
+     ============================================================ */
+  function setKey(key, val) {
+    switch (key) {
+      case "w": case "W": case "ArrowUp":    game.input.up = val; break;
+      case "s": case "S": case "ArrowDown":  game.input.down = val; break;
+      case "a": case "A": case "ArrowLeft":  game.input.left = val; break;
+      case "d": case "D": case "ArrowRight": game.input.right = val; break;
+      default: return false;
+    }
+    return true;
+  }
+
+  window.addEventListener("keydown", (e) => {
+    if (setKey(e.key, true)) {
+      if (e.key.startsWith("Arrow") || e.key === " ") e.preventDefault();
+    }
+  }, { passive: false });
+
+  window.addEventListener("keyup", (e) => {
+    if (setKey(e.key, false)) {
+      if (e.key.startsWith("Arrow")) e.preventDefault();
+    }
+  }, { passive: false });
+
+  /* ---- hentikan scroll saat bermain ---- */
+  document.addEventListener("touchmove", (e) => {
+    if (gameScreen.classList.contains("show")) {
+      // izinkan scroll hanya di dalam modal
+      if (!e.target.closest(".modal")) e.preventDefault();
+    }
+  }, { passive: false });
+
+  /* ============================================================
+     INPUT — KONTROL VIRTUAL HP
+     ============================================================ */
+  function bindCtrlButtons() {
+    const buttons = document.querySelectorAll(".ctrl");
+
+    buttons.forEach((btn) => {
+      const dir = btn.dataset.dir;
+
+      const press = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        Audio.resume();
+        btn.classList.add("active");
+        switch (dir) {
+          case "up":    game.input.up = true; break;
+          case "down":  game.input.down = true; break;
+          case "left":  game.input.left = true; break;
+          case "right": game.input.right = true; break;
+        }
+      };
+
+      const release = (e) => {
+        if (e) { e.preventDefault(); }
+        btn.classList.remove("active");
+        switch (dir) {
+          case "up":    game.input.up = false; break;
+          case "down":  game.input.down = false; break;
+          case "left":  game.input.left = false; break;
+          case "right": game.input.right = false; break;
+        }
+      };
+
+      btn.addEventListener("pointerdown", press);
+      btn.addEventListener("pointerup", release);
+      btn.addEventListener("pointercancel", release);
+      btn.addEventListener("pointerleave", release);
+      btn.addEventListener("contextmenu", (e) => e.preventDefault());
+    });
+
+    // lepaskan semua saat window blur
+    window.addEventListener("blur", () => {
+      game.input.up = game.input.down = game.input.left = game.input.right = false;
+      buttons.forEach((b) => b.classList.remove("active"));
+    });
+  }
+
+  /* ============================================================
+     TOMBOL-TOMBOL
+     ============================================================ */
+  function bindUI() {
+    /* --- MENU --- */
+    btnStart.addEventListener("click", () => {
+      Audio.init();
+      Audio.resume();
+      Audio.sfxClick();
+
+      menuScreen.classList.remove("show");
+      gameScreen.classList.add("show");
+
+      // reset total
+      game.score = 0;
+      game.totalTime = 0;
+
+      requestAnimationFrame(() => {
+        layout();
+        startLevel(0);
+      });
+    });
+
+    btnHowto.addEventListener("click", () => {
+      Audio.sfxClick();
+      showModal(modalHowto);
+    });
+
+    btnMusicMenu.addEventListener("click", () => {
+      const on = Audio.toggle();
+      Audio.sfxClick();
+      syncMusicButtons(on);
+    });
+
+    btnMusicGame.addEventListener("click", () => {
+      const on = Audio.toggle();
+      Audio.sfxClick();
+      syncMusicButtons(on);
+    });
+
+    btnCloseHowto.addEventListener("click", () => {
+      Audio.sfxClick();
+      hideModal(modalHowto);
+      // kalau sedang di game, lanjutkan
+      if (gameScreen.classList.contains("show") && game.running) {
+        game.paused = false;
+        game.lastTime = performance.now();
+      }
+    });
+
+    /* --- NEXT LEVEL --- */
+    btnNextLevel.addEventListener("click", () => {
+      Audio.sfxClick();
+      hideModal(modalLevel);
+      nextLevel();
+    });
+
+    /* --- GAME OVER --- */
+    btnRetry.addEventListener("click", () => {
+      Audio.sfxClick();
+      hideAllModals();
+      game.score = 0;
+      game.totalTime = 0;
+      gameScreen.classList.add("show");
+      menuScreen.classList.remove("show");
+      requestAnimationFrame(() => {
+        layout();
+        startLevel(0);
+      });
+    });
+
+    btnMenuGo.addEventListener("click", () => {
+      Audio.sfxClick();
+      hideAllModals();
+      goToMenu();
+    });
+
+    /* --- WIN --- */
+    btnPlayAgain.addEventListener("click", () => {
+      Audio.sfxClick();
+      hideAllModals();
+      game.score = 0;
+      game.totalTime = 0;
+      requestAnimationFrame(() => {
+        layout();
+        startLevel(0);
+      });
+    });
+
+    btnMenuWin.addEventListener("click", () => {
+      Audio.sfxClick();
+      hideAllModals();
+      goToMenu();
+    });
+
+    /* --- QUIT --- */
+    btnQuit.addEventListener("click", () => {
+      Audio.sfxClick();
+      goToMenu();
+    });
+
+    /* --- VOLUME --- */
+    volumeSlider.addEventListener("input", (e) => {
+      Audio.init();
+      const v = Number(e.target.value) / 100;
+      Audio.setVolume(v);
+    });
+
+    /* --- modal: klik luar untuk tutup howto --- */
+    modalHowto.addEventListener("click", (e) => {
+      if (e.target === modalHowto) {
+        hideModal(modalHowto);
+      }
+    });
+  }
+
+  function syncMusicButtons(on) {
+    const label = on ? "🔊 MUSIK ON" : "🔇 MUSIK OFF";
+    btnMusicMenu.textContent = label;
+    btnMusicGame.textContent = on ? "🔊 Musik" : "🔇 Musik";
+  }
+
+  function goToMenu() {
+    game.running = false;
+    game.paused = true;
+    Audio.stopMusic();
+    hideAllModals();
+
+    // reset input
+    game.input.up = game.input.down = game.input.left = game.input.right = false;
+
+    gameScreen.classList.remove("show");
+    menuScreen.classList.add("show");
+    updateMenuStats();
+  }
+
+  /* ============================================================
+     INIT
+     ============================================================ */
+  function init() {
+    loadStats();
+    updateMenuStats();
+
+    Audio.init();
+    syncMusicButtons(Audio.isEnabled());
+
+    bindUI();
+    bindCtrlButtons();
+
+    window.addEventListener("resize", () => {
+      if (gameScreen.classList.contains("show")) {
+        requestAnimationFrame(layout);
+      }
+    });
+
+    window.addEventListener("orientationchange", () => {
+      setTimeout(() => {
+        if (gameScreen.classList.contains("show")) layout();
+      }, 250);
+    });
+
+    // pause saat pindah tab
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden && game.running) {
+        game.paused = true;
+      } else if (!document.hidden && game.running) {
+        game.lastTime = performance.now();
+        game.paused = false;
+      }
+    });
+
+    // gambar preview di canvas (background) supaya tidak blank
+    layout();
+
+    // unlock audio pada interaksi pertama
+    const unlock = () => {
+      Audio.init();
+      Audio.resume();
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+    };
+    window.addEventListener("pointerdown", unlock, { once: true });
+    window.addEventListener("keydown", unlock, { once: true });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+
+})();
+</script>
+</body>
+</html>
